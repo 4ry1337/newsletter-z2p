@@ -1,1 +1,9 @@
 /target
+Cargo.lock
+
+*.pem
+.env
+.env*.local
+*.tsbuildinfo
+**/*.rs.bk
+*.pdb
