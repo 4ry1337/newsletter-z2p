@@ -3,8 +3,18 @@ name = "newsletter"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+path ="src/lib.rs"
+
+[[bin]]
+path = "src/main.rs"
+name = "newsletter"
+
 [dependencies]
 actix-web = {version = "4.9.0"}
 tokio = {version = "1.40.0", features = ["macros",
   "rt-multi-thread"]}
 sqlx = {version = "0.8.2"}
+
+[dev-dependencies]
+reqwest = "0.12"
