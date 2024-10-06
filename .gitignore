@@ -2,7 +2,7 @@
 Cargo.lock
 
 *.pem
-.env
+# .env
 .env*.local
 *.tsbuildinfo
 **/*.rs.bk
