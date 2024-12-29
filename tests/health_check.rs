@@ -2,6 +2,7 @@ use std::{net::TcpListener, sync::LazyLock};
 
 use newsletter::{
     configuration::{get_configuration, DatabaseSettings},
+    email_client::EmailClient,
     startup::run,
     telemetry::{get_subscriber, init_subscriber},
 };
@@ -36,7 +37,21 @@ async fn spawn_app() -> TestApp {
     configuration.database.database_name = Uuid::new_v4().to_string();
 
     let db_pool = configure_database(&configuration.database).await;
-    let server = run(listener, db_pool.clone()).expect("Failed to bind address.");
+
+    let sender_email = configuration
+        .email_client
+        .sender()
+        .expect("Invalid sender email address");
+    let timeout = configuration.email_client.timeout();
+    let email_client = EmailClient::new(
+        configuration.email_client.base_url,
+        sender_email,
+        configuration.email_client.authorization_token,
+        timeout,
+    );
+
+    let server = run(listener, db_pool.clone(), email_client).expect("Failed to bind address.");
+
     let _ = tokio::spawn(server);
 
     TestApp { address, db_pool }
