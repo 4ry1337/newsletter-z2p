@@ -43,8 +43,7 @@ impl EmailClient {
             html_body: html_content,
             text_body: text_content,
         };
-        let builder = self
-            .http_client
+        self.http_client
             .post(&url)
             .header(
                 "X-Postmark-Server-Token",
