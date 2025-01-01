@@ -22,6 +22,7 @@ chrono = { version = "0.4.39", default-features = false, features = ["clock"] }
 secrecy = {version = "0.10.3", features = ["serde"]}
 unicode-segmentation = "1.12.0"
 validator = "0.19.0"
+rand = {version = "0.8.5", features =["std_rng"]}
 
 # Tracing
 tracing = { version = "0.1.41", features = ["log"] }
@@ -50,9 +51,9 @@ features = ["json", "rustls-tls"]
 [dev-dependencies]
 tokio = {version = "1.42.0", features = ["rt", "macros"] }
 serde_json = "1.0.134"
+linkify = "0.10.0"
 wiremock = "0.6.2"
 claims = "0.8.0"
 fake = "3.0.1"
 quickcheck = "1.0.3"
 quickcheck_macros = "1"
-rand = "0.8.5"

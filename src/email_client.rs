@@ -36,6 +36,7 @@ impl EmailClient {
         text_content: &str,
     ) -> Result<(), reqwest::Error> {
         let url = format!("{}/email", self.base_url);
+
         let request_body = SendEmailRequest {
             from: self.sender.as_ref(),
             to: recipient.as_ref(),
@@ -43,6 +44,7 @@ impl EmailClient {
             html_body: html_content,
             text_body: text_content,
         };
+
         self.http_client
             .post(&url)
             .header(
@@ -53,6 +55,7 @@ impl EmailClient {
             .send()
             .await?
             .error_for_status()?;
+
         Ok(())
     }
 }
