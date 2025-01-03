@@ -145,6 +145,7 @@ mod tests {
         let _ = email_client
             .send_email(email(), &subject(), &content(), &content())
             .await;
+
         // Mock axpectations are checked at the drop
     }
 

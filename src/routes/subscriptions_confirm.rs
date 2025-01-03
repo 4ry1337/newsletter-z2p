@@ -16,6 +16,7 @@ pub async fn confirm(parameters: Query<Parameters>, pool: Data<PgPool>) -> HttpR
         Ok(id) => id,
         Err(_) => return HttpResponse::InternalServerError().finish(),
     };
+
     match id {
         None => HttpResponse::Unauthorized().finish(),
         Some(subscriber_id) => {
@@ -39,6 +40,7 @@ pub async fn confirm_subscriber(pool: &PgPool, subscriber_id: Uuid) -> Result<()
         tracing::error!("Failed to execute query: {:?}", e);
         e
     })?;
+
     Ok(())
 }
 
