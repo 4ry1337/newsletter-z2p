@@ -1,13 +1,12 @@
 use std::sync::LazyLock;
 
+use argon2::{password_hash::SaltString, Argon2, PasswordHasher};
 use newsletter::{
-    configuration::{get_configuration, DatabaseSettings},
+    configuration::get_configuration,
     startup::Application,
     telemetry::{get_subscriber, init_subscriber},
 };
-use secrecy::SecretString;
-use sha3::Digest;
-use sqlx::{Connection, Executor, PgConnection, PgPool};
+use sqlx::PgPool;
 use uuid::Uuid;
 use wiremock::MockServer;
 
@@ -115,35 +114,35 @@ pub async fn spawn_app(pool: PgPool) -> TestApp {
     test_app
 }
 
-async fn configure_database(config: &DatabaseSettings) -> PgPool {
-    let maintenance_settings = DatabaseSettings {
-        database_name: "postgres".to_string(),
-        username: "postgres".to_string(),
-        password: SecretString::from("password"),
-        ..config.clone()
-    };
-
-    let mut connection = PgConnection::connect_with(&maintenance_settings.connect_options())
-        .await
-        .expect("Failed to connect to Postgres");
-
-    connection
-        .execute(format!(r#"CREATE DATABASE "{}";"#, config.database_name).as_str())
-        .await
-        .expect("Failed to create database.");
-
-    let connection_pool = PgPool::connect_with(config.connect_options())
-        .await
-        .expect("Failed to connect to Postgres.");
-
-    sqlx::migrate!("./migrations")
-        .run(&connection_pool)
-        .await
-        .expect("Failed to migrate the database");
-
-    connection_pool
-}
-
+//async fn configure_database(config: &DatabaseSettings) -> PgPool {
+//    let maintenance_settings = DatabaseSettings {
+//        database_name: "postgres".to_string(),
+//        username: "postgres".to_string(),
+//        password: SecretString::from("password"),
+//        ..config.clone()
+//    };
+//
+//    let mut connection = PgConnection::connect_with(&maintenance_settings.connect_options())
+//        .await
+//        .expect("Failed to connect to Postgres");
+//
+//    connection
+//        .execute(format!(r#"CREATE DATABASE "{}";"#, config.database_name).as_str())
+//        .await
+//        .expect("Failed to create database.");
+//
+//    let connection_pool = PgPool::connect_with(config.connect_options())
+//        .await
+//        .expect("Failed to connect to Postgres.");
+//
+//    sqlx::migrate!("./migrations")
+//        .run(&connection_pool)
+//        .await
+//        .expect("Failed to migrate the database");
+//
+//    connection_pool
+//}
+//
 pub struct TestUser {
     pub user_id: Uuid,
     pub username: String,
@@ -160,8 +159,11 @@ impl TestUser {
     }
 
     async fn store(&self, pool: &PgPool) {
-        let password_hash = sha3::Sha3_256::digest(self.password.as_bytes());
-        let password_hash = format!("{:x}", password_hash);
+        let salt = SaltString::generate(&mut rand::thread_rng());
+        let password_hash = Argon2::default()
+            .hash_password(self.password.as_bytes(), &salt)
+            .unwrap()
+            .to_string();
         sqlx::query!(
             "INSERT INTO USERS (user_id, username, password_hash) VALUES ($1, $2, $3)",
             self.user_id,

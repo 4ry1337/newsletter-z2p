@@ -7,7 +7,7 @@ use wiremock::{
 use crate::helpers::{spawn_app, ConfirmationLinks, TestApp};
 
 #[sqlx::test]
-async fn newsletter_are_not_delivered_to_unconfirmed_subscribers(pool: PgPool) {
+async fn newsletters_are_not_delivered_to_unconfirmed_subscribers(pool: PgPool) {
     let app = spawn_app(pool).await;
     create_unconfirmed_subscriber(&app).await;
 
@@ -31,7 +31,7 @@ async fn newsletter_are_not_delivered_to_unconfirmed_subscribers(pool: PgPool) {
 }
 
 #[sqlx::test]
-async fn newsletter_are_delivered_to_confirmed_subscribers(pool: PgPool) {
+async fn newsletters_are_delivered_to_confirmed_subscribers(pool: PgPool) {
     let app = spawn_app(pool).await;
     create_confirmed_subscriber(&app).await;
 
