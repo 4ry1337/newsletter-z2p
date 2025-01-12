@@ -1,3 +1,4 @@
+use sqlx::PgPool;
 use wiremock::{
     matchers::{any, method, path},
     Mock, ResponseTemplate,
@@ -5,9 +6,9 @@ use wiremock::{
 
 use crate::helpers::{spawn_app, ConfirmationLinks, TestApp};
 
-#[tokio::test]
-async fn newsletter_are_not_delivered_to_unconfirmed_subscribers() {
-    let app = spawn_app().await;
+#[sqlx::test]
+async fn newsletter_are_not_delivered_to_unconfirmed_subscribers(pool: PgPool) {
+    let app = spawn_app(pool).await;
     create_unconfirmed_subscriber(&app).await;
 
     Mock::given(any())
@@ -29,9 +30,9 @@ async fn newsletter_are_not_delivered_to_unconfirmed_subscribers() {
     assert_eq!(response.status().as_u16(), 200)
 }
 
-#[tokio::test]
-async fn newsletter_are_delivered_to_confirmed_subscribers() {
-    let app = spawn_app().await;
+#[sqlx::test]
+async fn newsletter_are_delivered_to_confirmed_subscribers(pool: PgPool) {
+    let app = spawn_app(pool).await;
     create_confirmed_subscriber(&app).await;
 
     Mock::given(path("/email"))
@@ -54,9 +55,9 @@ async fn newsletter_are_delivered_to_confirmed_subscribers() {
     assert_eq!(response.status().as_u16(), 200)
 }
 
-#[tokio::test]
-async fn newsletters_returns_400_for_invalid_data() {
-    let app = spawn_app().await;
+#[sqlx::test]
+async fn newsletters_returns_400_for_invalid_data(pool: PgPool) {
+    let app = spawn_app(pool).await;
     let test_cases = vec![
         (
             serde_json::json!({
@@ -119,4 +120,30 @@ async fn create_confirmed_subscriber(app: &TestApp) {
         .unwrap()
         .error_for_status()
         .unwrap();
+}
+
+#[sqlx::test]
+async fn requests_missing_authorization_are_rejected(pool: PgPool) {
+    let app = spawn_app(pool).await;
+
+    let newsletter_request_body = serde_json::json!({
+        "title":"Newsletter Title",
+        "content": {
+            "text": "Newsletter body as plain text",
+            "html": "<p>Newsletter body as HTML</p>"
+        }
+    });
+
+    let response = reqwest::Client::new()
+        .post(&format!("{}/newsletters", &app.address))
+        .json(&newsletter_request_body)
+        .send()
+        .await
+        .expect("Failed to execute request.");
+
+    assert_eq!(response.status().as_u16(), 401);
+    assert_eq!(
+        r#"Basic realm="publish""#,
+        response.headers()["WWW-Authenticate"]
+    );
 }

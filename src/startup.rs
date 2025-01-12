@@ -25,6 +25,13 @@ pub struct ApplicationBaseUrl(pub String);
 impl Application {
     pub async fn build(configuration: Settings) -> Result<Self, std::io::Error> {
         let connection_pool = get_connection_pool(&configuration.database);
+        Self::build_with_pool(configuration, connection_pool).await
+    }
+
+    pub async fn build_with_pool(
+        configuration: Settings,
+        connection_pool: PgPool,
+    ) -> Result<Self, std::io::Error> {
         let sender_email = configuration
             .email_client
             .sender()

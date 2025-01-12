@@ -2,10 +2,11 @@ use std::sync::LazyLock;
 
 use newsletter::{
     configuration::{get_configuration, DatabaseSettings},
-    startup::{get_connection_pool, Application},
+    startup::Application,
     telemetry::{get_subscriber, init_subscriber},
 };
 use secrecy::SecretString;
+use sha3::Digest;
 use sqlx::{Connection, Executor, PgConnection, PgPool};
 use uuid::Uuid;
 use wiremock::MockServer;
@@ -27,6 +28,7 @@ pub struct TestApp {
     pub port: u16,
     pub db_pool: PgPool,
     pub email_server: MockServer,
+    pub test_user: TestUser,
 }
 
 pub struct ConfirmationLinks {
@@ -69,6 +71,7 @@ impl TestApp {
     pub async fn post_newsletters(&self, body: serde_json::Value) -> reqwest::Response {
         reqwest::Client::new()
             .post(&format!("{}/newsletters", &self.address))
+            .basic_auth(&self.test_user.username, Some(&self.test_user.password))
             .json(&body)
             .send()
             .await
@@ -76,22 +79,22 @@ impl TestApp {
     }
 }
 
-pub async fn spawn_app() -> TestApp {
+pub async fn spawn_app(pool: PgPool) -> TestApp {
     LazyLock::force(&TRACING);
 
     let email_server = MockServer::start().await;
 
     let configuration = {
         let mut c = get_configuration().expect("Failed to read configuration.");
-        c.database.database_name = Uuid::new_v4().to_string();
+        //c.database.database_name = Uuid::new_v4().to_string();
         c.application.port = 0;
         c.email_client.base_url = email_server.uri();
         c
     };
 
-    configure_database(&configuration.database).await;
+    //configure_database(&configuration.database).await;
 
-    let application = Application::build(configuration.clone())
+    let application = Application::build_with_pool(configuration.clone(), pool.clone())
         .await
         .expect("Failed to build application.");
 
@@ -101,12 +104,15 @@ pub async fn spawn_app() -> TestApp {
 
     let _ = tokio::spawn(application.run_until_stopped());
 
-    TestApp {
+    let test_app = TestApp {
         address,
         port: application_port,
-        db_pool: get_connection_pool(&configuration.database),
+        db_pool: pool,
         email_server,
-    }
+        test_user: TestUser::generate(),
+    };
+    test_app.test_user.store(&test_app.db_pool).await;
+    test_app
 }
 
 async fn configure_database(config: &DatabaseSettings) -> PgPool {
@@ -136,4 +142,34 @@ async fn configure_database(config: &DatabaseSettings) -> PgPool {
         .expect("Failed to migrate the database");
 
     connection_pool
+}
+
+pub struct TestUser {
+    pub user_id: Uuid,
+    pub username: String,
+    pub password: String,
+}
+
+impl TestUser {
+    pub fn generate() -> Self {
+        Self {
+            user_id: Uuid::new_v4(),
+            username: Uuid::new_v4().to_string(),
+            password: Uuid::new_v4().to_string(),
+        }
+    }
+
+    async fn store(&self, pool: &PgPool) {
+        let password_hash = sha3::Sha3_256::digest(self.password.as_bytes());
+        let password_hash = format!("{:x}", password_hash);
+        sqlx::query!(
+            "INSERT INTO USERS (user_id, username, password_hash) VALUES ($1, $2, $3)",
+            self.user_id,
+            self.username,
+            password_hash,
+        )
+        .execute(pool)
+        .await
+        .expect("Failed to store test user.");
+    }
 }

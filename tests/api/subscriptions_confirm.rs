@@ -1,3 +1,4 @@
+use sqlx::PgPool;
 use wiremock::{
     matchers::{method, path},
     Mock, ResponseTemplate,
@@ -5,9 +6,9 @@ use wiremock::{
 
 use crate::helpers::spawn_app;
 
-#[tokio::test]
-async fn confirmations_without_token_are_rejected_with_a_400() {
-    let app = spawn_app().await;
+#[sqlx::test]
+async fn confirmations_without_token_are_rejected_with_a_400(pool: PgPool) {
+    let app = spawn_app(pool).await;
 
     let response = reqwest::get(format!("{}/subscriptions/confirm", app.address))
         .await
@@ -16,9 +17,9 @@ async fn confirmations_without_token_are_rejected_with_a_400() {
     assert_eq!(400, response.status().as_u16());
 }
 
-#[tokio::test]
-async fn the_link_returned_by_subscribe_returns_a_200_if_called() {
-    let app = spawn_app().await;
+#[sqlx::test]
+async fn the_link_returned_by_subscribe_returns_a_200_if_called(pool: PgPool) {
+    let app = spawn_app(pool).await;
     let body = "name=rakhat&email=yskak.rakhat%40gmail.com";
 
     Mock::given(path("/email"))
@@ -38,9 +39,9 @@ async fn the_link_returned_by_subscribe_returns_a_200_if_called() {
     assert_eq!(response.status().as_u16(), 200);
 }
 
-#[tokio::test]
-async fn clicking_on_the_confirmation_link_confirms_a_subscriber() {
-    let app = spawn_app().await;
+#[sqlx::test]
+async fn clicking_on_the_confirmation_link_confirms_a_subscriber(pool: PgPool) {
+    let app = spawn_app(pool).await;
     let body = "name=rakhat&email=yskak.rakhat%40gmail.com";
 
     Mock::given(path("/email"))
