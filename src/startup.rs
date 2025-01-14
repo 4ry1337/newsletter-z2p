@@ -5,13 +5,14 @@ use actix_web::{
     web::{self, Data},
     App, HttpServer,
 };
+use secrecy::SecretString;
 use sqlx::{postgres::PgPoolOptions, PgPool};
 use tracing_actix_web::TracingLogger;
 
 use crate::{
     configuration::{DatabaseSettings, Settings},
     email_client::EmailClient,
-    routes::{confirm, health_check, publish_newsletter, subscribe},
+    routes::{confirm, health_check, home, login, login_form, publish_newsletter, subscribe},
 };
 
 pub struct Application {
@@ -21,6 +22,9 @@ pub struct Application {
 
 #[derive(Debug, Clone)]
 pub struct ApplicationBaseUrl(pub String);
+
+#[derive(Debug, Clone)]
+pub struct HmacSecret(pub SecretString);
 
 impl Application {
     pub async fn build(configuration: Settings) -> Result<Self, std::io::Error> {
@@ -54,6 +58,7 @@ impl Application {
             connection_pool,
             email_client,
             configuration.application.base_url,
+            configuration.application.hmac_secret,
         )?;
 
         Ok(Self { port, server })
@@ -77,20 +82,22 @@ fn run(
     db_pool: PgPool,
     email_client: EmailClient,
     base_url: String,
+    hmac_secret: SecretString,
 ) -> Result<Server, std::io::Error> {
-    let db_pool = Data::new(db_pool);
-    let email_client = Data::new(email_client);
-    let base_url = Data::new(ApplicationBaseUrl(base_url));
     let server = HttpServer::new(move || {
         App::new()
             .wrap(TracingLogger::default())
+            .route("/", web::get().to(home))
+            .route("/login", web::get().to(login_form))
+            .route("/login", web::post().to(login))
             .route("/health_check", web::get().to(health_check))
             .route("/subscriptions", web::post().to(subscribe))
             .route("/subscriptions/confirm", web::get().to(confirm))
             .route("/newsletters", web::post().to(publish_newsletter))
-            .app_data(db_pool.clone())
-            .app_data(email_client.clone())
-            .app_data(base_url.clone())
+            .app_data(Data::new(db_pool.clone()))
+            .app_data(Data::new(email_client.clone()))
+            .app_data(Data::new(ApplicationBaseUrl(base_url.clone())))
+            .app_data(Data::new(HmacSecret(hmac_secret.clone())))
     })
     .listen(listener)?
     .run();
