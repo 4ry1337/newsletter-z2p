@@ -71,6 +71,7 @@ features = ["json", "rustls-tls", "cookies"]
 
 [dev-dependencies]
 tokio = { version = "1.42.0", features = ["rt", "macros"] }
+serde_urlencoded = "0.7.1"
 serde_json = "1.0.134"
 linkify = "0.10.0"
 wiremock = "0.6.2"

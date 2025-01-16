@@ -4,12 +4,15 @@ use std::fmt::Write;
 
 use crate::authentication::UserId;
 
+#[tracing::instrument(
+    name="Get change password form",
+    skip(flash_messages, user_id),
+    fields(user_id=%*user_id)
+)]
 pub async fn change_password_form(
     flash_messages: IncomingFlashMessages,
     user_id: web::ReqData<UserId>,
 ) -> Result<HttpResponse, actix_web::Error> {
-    user_id.into_inner();
-
     let mut message_html = String::new();
     for m in flash_messages.iter() {
         writeln!(message_html, "<p><i>{}</i></p>", m.content()).unwrap()

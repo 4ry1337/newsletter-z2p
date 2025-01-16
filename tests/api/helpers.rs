@@ -30,7 +30,6 @@ pub struct TestApp {
     pub test_user: TestUser,
     pub api_client: reqwest::Client,
 }
-
 pub struct ConfirmationLinks {
     pub html: reqwest::Url,
     pub plain_text: reqwest::Url,
@@ -58,6 +57,7 @@ impl TestApp {
             assert_eq!(links.len(), 1);
             let raw_link = links[0].as_str().to_owned();
             let mut confirmation_link = reqwest::Url::parse(&raw_link).unwrap();
+            assert_eq!(confirmation_link.host_str().unwrap(), "127.0.0.1");
             confirmation_link.set_port(Some(self.port)).unwrap();
             confirmation_link
         };
@@ -68,11 +68,25 @@ impl TestApp {
         ConfirmationLinks { html, plain_text }
     }
 
-    pub async fn post_newsletters(&self, body: serde_json::Value) -> reqwest::Response {
+    pub async fn get_publish_newsletter(&self) -> reqwest::Response {
         self.api_client
-            .post(&format!("{}/newsletters", &self.address))
-            .basic_auth(&self.test_user.username, Some(&self.test_user.password))
-            .json(&body)
+            .get(&format!("{}/admin/newsletters", &self.address))
+            .send()
+            .await
+            .expect("Failed to execute request.")
+    }
+
+    pub async fn get_publish_newsletter_html(&self) -> String {
+        self.get_publish_newsletter().await.text().await.unwrap()
+    }
+
+    pub async fn post_publish_newsletter<Body>(&self, body: Body) -> reqwest::Response
+    where
+        Body: serde::Serialize,
+    {
+        self.api_client
+            .post(&format!("{}/admin/newsletters", &self.address))
+            .form(&body)
             .send()
             .await
             .expect("Failed to execute request.")
@@ -167,8 +181,6 @@ pub async fn spawn_app(pool: PgPool) -> TestApp {
 
     let application_port = application.port();
 
-    let address = format!("http://127.0.0.1:{}", application.port());
-
     let _ = tokio::spawn(application.run_until_stopped());
 
     let client = reqwest::Client::builder()
@@ -178,7 +190,7 @@ pub async fn spawn_app(pool: PgPool) -> TestApp {
         .unwrap();
 
     let test_app = TestApp {
-        address,
+        address: format!("http://localhost:{}", application_port),
         port: application_port,
         db_pool: pool,
         email_server,
@@ -219,7 +231,7 @@ pub async fn spawn_app(pool: PgPool) -> TestApp {
 //}
 //
 pub struct TestUser {
-    pub user_id: Uuid,
+    user_id: Uuid,
     pub username: String,
     pub password: String,
 }
@@ -231,6 +243,14 @@ impl TestUser {
             username: Uuid::new_v4().to_string(),
             password: Uuid::new_v4().to_string(),
         }
+    }
+
+    pub async fn login(&self, app: &TestApp) {
+        app.post_login(&serde_json::json!({
+            "username": &self.username,
+            "password": &self.password,
+        }))
+        .await;
     }
 
     async fn store(&self, pool: &PgPool) {
