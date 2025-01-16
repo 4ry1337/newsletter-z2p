@@ -1,4 +1,4 @@
-use sqlx::PgPool;
+use sqlx::postgres::{PgConnectOptions, PgPoolOptions};
 use wiremock::{
     matchers::{method, path},
     Mock, ResponseTemplate,
@@ -7,7 +7,11 @@ use wiremock::{
 use crate::helpers::spawn_app;
 
 #[sqlx::test]
-async fn confirmations_without_token_are_rejected_with_a_400(pool: PgPool) {
+async fn confirmations_without_token_are_rejected_with_a_400(
+    _: PgPoolOptions,
+    options: PgConnectOptions,
+) {
+    let pool = PgPoolOptions::new().connect_with(options).await.unwrap();
     let app = spawn_app(pool).await;
 
     let response = reqwest::get(format!("{}/subscriptions/confirm", app.address))
@@ -18,7 +22,11 @@ async fn confirmations_without_token_are_rejected_with_a_400(pool: PgPool) {
 }
 
 #[sqlx::test]
-async fn the_link_returned_by_subscribe_returns_a_200_if_called(pool: PgPool) {
+async fn the_link_returned_by_subscribe_returns_a_200_if_called(
+    _: PgPoolOptions,
+    options: PgConnectOptions,
+) {
+    let pool = PgPoolOptions::new().connect_with(options).await.unwrap();
     let app = spawn_app(pool).await;
     let body = "name=rakhat&email=yskak.rakhat%40gmail.com";
 
@@ -40,7 +48,11 @@ async fn the_link_returned_by_subscribe_returns_a_200_if_called(pool: PgPool) {
 }
 
 #[sqlx::test]
-async fn clicking_on_the_confirmation_link_confirms_a_subscriber(pool: PgPool) {
+async fn clicking_on_the_confirmation_link_confirms_a_subscriber(
+    _: PgPoolOptions,
+    options: PgConnectOptions,
+) {
+    let pool = PgPoolOptions::new().connect_with(options).await.unwrap();
     let app = spawn_app(pool).await;
     let body = "name=rakhat&email=yskak.rakhat%40gmail.com";
 

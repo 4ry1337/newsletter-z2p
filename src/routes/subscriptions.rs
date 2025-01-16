@@ -14,9 +14,8 @@ use crate::{
     domain::{NewSubscriber, SubscriberEmail, SubscriberName},
     email_client::EmailClient,
     startup::ApplicationBaseUrl,
+    utils::error_chain_fmt,
 };
-
-use super::error_chain_fmt;
 
 #[derive(Deserialize)]
 pub struct FormData {

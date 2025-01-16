@@ -1,4 +1,4 @@
-use sqlx::PgPool;
+use sqlx::postgres::{PgConnectOptions, PgPoolOptions};
 use wiremock::{
     matchers::{method, path},
     Mock, ResponseTemplate,
@@ -7,7 +7,8 @@ use wiremock::{
 use crate::helpers::spawn_app;
 
 #[sqlx::test]
-async fn subscribe_returns_a_200_for_valid_form_data(pool: PgPool) {
+async fn subscribe_returns_a_200_for_valid_form_data(_: PgPoolOptions, options: PgConnectOptions) {
+    let pool = PgPoolOptions::new().connect_with(options).await.unwrap();
     let app = spawn_app(pool).await;
     let body = "name=rakhat&email=yskak.rakhat%40gmail.com";
 
@@ -22,7 +23,8 @@ async fn subscribe_returns_a_200_for_valid_form_data(pool: PgPool) {
 }
 
 #[sqlx::test]
-async fn subscribe_persists_the_new_subscriber(pool: PgPool) {
+async fn subscribe_persists_the_new_subscriber(_: PgPoolOptions, options: PgConnectOptions) {
+    let pool = PgPoolOptions::new().connect_with(options).await.unwrap();
     let app = spawn_app(pool).await;
     let body = "name=rakhat&email=yskak.rakhat%40gmail.com";
 
@@ -39,7 +41,8 @@ async fn subscribe_persists_the_new_subscriber(pool: PgPool) {
 }
 
 #[sqlx::test]
-async fn subscribe_returns_a_400_when_data_is_missing(pool: PgPool) {
+async fn subscribe_returns_a_400_when_data_is_missing(_: PgPoolOptions, options: PgConnectOptions) {
+    let pool = PgPoolOptions::new().connect_with(options).await.unwrap();
     // Arrange
     let app = spawn_app(pool).await;
     let test_cases = vec![
@@ -61,7 +64,11 @@ async fn subscribe_returns_a_400_when_data_is_missing(pool: PgPool) {
 }
 
 #[sqlx::test]
-async fn subscribe_returns_a_200_when_fields_are_present_but_empty(pool: PgPool) {
+async fn subscribe_returns_a_200_when_fields_are_present_but_empty(
+    _: PgPoolOptions,
+    options: PgConnectOptions,
+) {
+    let pool = PgPoolOptions::new().connect_with(options).await.unwrap();
     let app = spawn_app(pool).await;
     let test_cases = vec![
         ("name=&email=ursula_le_guin%40gmail.com", "empty name"),
@@ -82,7 +89,11 @@ async fn subscribe_returns_a_200_when_fields_are_present_but_empty(pool: PgPool)
 }
 
 #[sqlx::test]
-async fn subscribe_send_a_confirmation_email_for_valid_data(pool: PgPool) {
+async fn subscribe_send_a_confirmation_email_for_valid_data(
+    _: PgPoolOptions,
+    options: PgConnectOptions,
+) {
+    let pool = PgPoolOptions::new().connect_with(options).await.unwrap();
     let app = spawn_app(pool).await;
     let body = "name=rakhat&email=yskak.rakhat%40gmail.com";
 
@@ -97,7 +108,11 @@ async fn subscribe_send_a_confirmation_email_for_valid_data(pool: PgPool) {
 }
 
 #[sqlx::test]
-async fn subscribe_send_a_confirmation_email_with_a_link(pool: PgPool) {
+async fn subscribe_send_a_confirmation_email_with_a_link(
+    _: PgPoolOptions,
+    options: PgConnectOptions,
+) {
+    let pool = PgPoolOptions::new().connect_with(options).await.unwrap();
     let app = spawn_app(pool).await;
     let body = "name=rakhat&email=yskak.rakhat%40gmail.com";
 
@@ -115,7 +130,11 @@ async fn subscribe_send_a_confirmation_email_with_a_link(pool: PgPool) {
 }
 
 #[sqlx::test]
-async fn subscribe_fails_if_there_is_a_fatal_database_error(pool: PgPool) {
+async fn subscribe_fails_if_there_is_a_fatal_database_error(
+    _: PgPoolOptions,
+    options: PgConnectOptions,
+) {
+    let pool = PgPoolOptions::new().connect_with(options).await.unwrap();
     let app = spawn_app(pool).await;
     let body = "name=rakhat&email=yskak.rakhat%40gmail.com";
 

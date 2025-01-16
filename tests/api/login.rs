@@ -1,9 +1,10 @@
-use sqlx::PgPool;
+use sqlx::postgres::{PgConnectOptions, PgPoolOptions};
 
 use crate::helpers::{assert_is_redirect_to, spawn_app};
 
 #[sqlx::test]
-async fn an_error_flash_message_is_set_on_failure(pool: PgPool) {
+async fn an_error_flash_message_is_set_on_failure(_: PgPoolOptions, options: PgConnectOptions) {
+    let pool = PgPoolOptions::new().connect_with(options).await.unwrap();
     let app = spawn_app(pool).await;
 
     // Act
@@ -26,7 +27,11 @@ async fn an_error_flash_message_is_set_on_failure(pool: PgPool) {
 }
 
 #[sqlx::test]
-async fn redirect_to_admin_dashboard_after_login_success(pool: PgPool) {
+async fn redirect_to_admin_dashboard_after_login_success(
+    _: PgPoolOptions,
+    options: PgConnectOptions,
+) {
+    let pool = PgPoolOptions::new().connect_with(options).await.unwrap();
     let app = spawn_app(pool).await;
 
     // Act

@@ -14,9 +14,8 @@ use crate::{
     authentication::{validate_credentials, AuthError, Credentials},
     domain::SubscriberEmail,
     email_client::EmailClient,
+    utils::error_chain_fmt,
 };
-
-use super::error_chain_fmt;
 
 #[derive(thiserror::Error)]
 pub enum PublishError {

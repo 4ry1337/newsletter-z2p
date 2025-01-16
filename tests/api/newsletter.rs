@@ -1,4 +1,4 @@
-use sqlx::PgPool;
+use sqlx::postgres::{PgConnectOptions, PgPoolOptions};
 use wiremock::{
     matchers::{any, method, path},
     Mock, ResponseTemplate,
@@ -7,7 +7,11 @@ use wiremock::{
 use crate::helpers::{spawn_app, ConfirmationLinks, TestApp};
 
 #[sqlx::test]
-async fn newsletters_are_not_delivered_to_unconfirmed_subscribers(pool: PgPool) {
+async fn newsletters_are_not_delivered_to_unconfirmed_subscribers(
+    _: PgPoolOptions,
+    options: PgConnectOptions,
+) {
+    let pool = PgPoolOptions::new().connect_with(options).await.unwrap();
     let app = spawn_app(pool).await;
     create_unconfirmed_subscriber(&app).await;
 
@@ -31,7 +35,11 @@ async fn newsletters_are_not_delivered_to_unconfirmed_subscribers(pool: PgPool) 
 }
 
 #[sqlx::test]
-async fn newsletters_are_delivered_to_confirmed_subscribers(pool: PgPool) {
+async fn newsletters_are_delivered_to_confirmed_subscribers(
+    _: PgPoolOptions,
+    options: PgConnectOptions,
+) {
+    let pool = PgPoolOptions::new().connect_with(options).await.unwrap();
     let app = spawn_app(pool).await;
     create_confirmed_subscriber(&app).await;
 
@@ -56,7 +64,8 @@ async fn newsletters_are_delivered_to_confirmed_subscribers(pool: PgPool) {
 }
 
 #[sqlx::test]
-async fn newsletters_returns_400_for_invalid_data(pool: PgPool) {
+async fn newsletters_returns_400_for_invalid_data(_: PgPoolOptions, options: PgConnectOptions) {
+    let pool = PgPoolOptions::new().connect_with(options).await.unwrap();
     let app = spawn_app(pool).await;
     let test_cases = vec![
         (
@@ -123,7 +132,8 @@ async fn create_confirmed_subscriber(app: &TestApp) {
 }
 
 #[sqlx::test]
-async fn requests_missing_authorization_are_rejected(pool: PgPool) {
+async fn requests_missing_authorization_are_rejected(_: PgPoolOptions, options: PgConnectOptions) {
+    let pool = PgPoolOptions::new().connect_with(options).await.unwrap();
     let app = spawn_app(pool).await;
 
     let newsletter_request_body = serde_json::json!({
@@ -149,7 +159,7 @@ async fn requests_missing_authorization_are_rejected(pool: PgPool) {
 }
 
 //#[sqlx::test]
-//async fn non_existing_user_is_rejected(pool: PgPool) {
+//async fn non_existing_user_is_rejected(_: PgPoolOptions, options: PgConnectOptions){ let pool = PgPoolOptions::new().connect_with(options).await.unwrap();
 //    let app = spawn_app(pool).await;
 //    let username = Uuid::new_v4().to_string();
 //    let password = Uuid::new_v4().to_string();
@@ -176,7 +186,7 @@ async fn requests_missing_authorization_are_rejected(pool: PgPool) {
 //}
 //
 //#[sqlx::test]
-//async fn invalid_password_is_rejected(pool: PgPool) {
+//async fn invalid_password_is_rejected(_: PgPoolOptions, options: PgConnectOptions){ let pool = PgPoolOptions::new().connect_with(options).await.unwrap();
 //    let app = spawn_app(pool).await;
 //
 //    let username = &app.test_user.username;
