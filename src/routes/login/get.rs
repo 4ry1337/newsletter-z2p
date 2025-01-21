@@ -9,7 +9,6 @@ pub async fn login_form(flash_messages: IncomingFlashMessages) -> HttpResponse {
     for m in flash_messages.iter() {
         writeln!(error_html, "<p><i>{}</i></p>", m.content()).unwrap()
     }
-    tracing::Span::current().record("ERROOOOOR", &error_html);
 
     HttpResponse::Ok()
         .content_type(ContentType::html())

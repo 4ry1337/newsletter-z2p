@@ -14,7 +14,7 @@ use crate::{
 pub enum LoginError {
     #[error("Authentication failed.")]
     AuthError(#[source] anyhow::Error),
-    #[error(transparent)]
+    #[error("Something went wrong")]
     UnexpectedError(#[from] anyhow::Error),
 }
 

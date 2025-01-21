@@ -2,6 +2,7 @@ use std::fmt::Write;
 
 use actix_web::{http::header::ContentType, HttpResponse};
 use actix_web_flash_messages::IncomingFlashMessages;
+use uuid::Uuid;
 
 #[tracing::instrument(name = "Get newsletter form", skip(flash_messages))]
 pub async fn newsletter_form(
@@ -11,6 +12,8 @@ pub async fn newsletter_form(
     for m in flash_messages.iter() {
         writeln!(message_html, "<p><i>{}</i></p>", m.content()).unwrap()
     }
+
+    let idempotency_key = Uuid::new_v4();
 
     Ok(HttpResponse::Ok()
         .content_type(ContentType::html())
@@ -54,6 +57,7 @@ pub async fn newsletter_form(
                     cols="50"
                 ></textarea>
                 </label>
+                <input hidden type="text" name="idempotency_key" value="{idempotency_key}">
                 <button type="submit">Pubish</button>
             </form>
             <p><a href="/admin/dashboard">&lt;- Back</a></p>

@@ -3,7 +3,7 @@ use serde_aux::field_attributes::deserialize_number_from_string;
 use sqlx::postgres::{PgConnectOptions, PgSslMode};
 use std::convert::{TryFrom, TryInto};
 
-use crate::domain::SubscriberEmail;
+use crate::{domain::SubscriberEmail, email_client::EmailClient};
 
 #[derive(Debug, Clone, serde::Deserialize)]
 pub struct Settings {
@@ -20,6 +20,13 @@ pub struct ApplicationSettings {
     pub host: String,
     pub base_url: String,
     pub hmac_secret: SecretString,
+    pub idempotency: IdempotencySettings,
+}
+
+#[derive(Debug, Clone, serde::Deserialize)]
+pub struct IdempotencySettings {
+    pub expire_in_sec: u64,
+    pub check_sec: u64,
 }
 
 #[derive(Debug, Clone, serde::Deserialize)]
@@ -56,15 +63,39 @@ pub struct EmailClientSettings {
     pub sender_email: String,
     pub authorization_token: SecretString,
     pub timeout_milliseconds: u64,
+    pub retry: RetrySettings,
 }
 
 impl EmailClientSettings {
+    pub fn client(self) -> EmailClient {
+        let sender_email = self.sender().expect("Invalid sender email address.");
+
+        let timeout = self.timeout();
+
+        EmailClient::new(
+            self.base_url,
+            sender_email,
+            self.authorization_token,
+            timeout,
+        )
+    }
+
     pub fn timeout(&self) -> std::time::Duration {
         std::time::Duration::from_millis(self.timeout_milliseconds)
     }
     pub fn sender(&self) -> Result<SubscriberEmail, String> {
         SubscriberEmail::parse(self.sender_email.clone())
     }
+}
+
+#[derive(Debug, Clone, serde::Deserialize)]
+pub struct RetrySettings {
+    #[serde(deserialize_with = "deserialize_number_from_string")]
+    pub max_retries: u16,
+    #[serde(deserialize_with = "deserialize_number_from_string")]
+    pub cap_sec: u64,
+    #[serde(deserialize_with = "deserialize_number_from_string")]
+    pub base_sec: u64,
 }
 
 pub fn get_configuration() -> Result<Settings, config::ConfigError> {

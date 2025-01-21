@@ -3,6 +3,9 @@ application:
   port: 8000
   base_url: "http://127.0.0.1"
   hmac_secret: "long-and-very-secret-random-key-needed-to-verify-message-integrity"
+  idempotency:
+    expire_in_sec: 1800
+    check_sec: 3600
 database:
   host: "127.0.0.1"
   port: 5432
@@ -15,3 +18,7 @@ email_client:
   sender_email: "test@gmail.com"
   authorization_token: "my-secret-token"
   timeout_milliseconds: 10000
+  retry:
+    max_retries: 10
+    base_sec: 5
+    cap_sec: 600
