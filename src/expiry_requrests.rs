@@ -4,7 +4,7 @@ use sqlx::{postgres::types::PgInterval, PgPool};
 
 use crate::{
     configuration::{IdempotencySettings, Settings},
-    startup::get_connection_pool,
+    startup::get_connection_pool
 };
 
 #[tracing::instrument(skip_all)]
@@ -26,7 +26,7 @@ pub async fn try_execute_task(pool: &PgPool, expire_in_sec: u64) -> Result<(), a
                 query.rows_affected()
             );
             Ok(())
-        }
+        },
         Err(e) => {
             tracing::error!(
                 error.cause_chain = ?e,
@@ -43,7 +43,7 @@ async fn worker_loop(pool: PgPool, idempotency: IdempotencySettings) -> Result<(
         match try_execute_task(&pool, idempotency.expire_in_sec).await {
             Ok(_) => {
                 tokio::time::sleep(Duration::from_secs(idempotency.check_sec)).await;
-            }
+            },
             Err(_) => {
                 tokio::time::sleep(Duration::from_secs(1)).await;
             }

@@ -7,37 +7,37 @@ use crate::{domain::SubscriberEmail, email_client::EmailClient};
 
 #[derive(Debug, Clone, serde::Deserialize)]
 pub struct Settings {
-    pub application: ApplicationSettings,
-    pub database: DatabaseSettings,
+    pub application:  ApplicationSettings,
+    pub database:     DatabaseSettings,
     pub email_client: EmailClientSettings,
-    pub redis_uri: SecretString,
+    pub redis_uri:    SecretString
 }
 
 #[derive(Debug, Clone, serde::Deserialize)]
 pub struct ApplicationSettings {
     #[serde(deserialize_with = "deserialize_number_from_string")]
-    pub port: u16,
-    pub host: String,
-    pub base_url: String,
+    pub port:        u16,
+    pub host:        String,
+    pub base_url:    String,
     pub hmac_secret: SecretString,
-    pub idempotency: IdempotencySettings,
+    pub idempotency: IdempotencySettings
 }
 
 #[derive(Debug, Clone, serde::Deserialize)]
 pub struct IdempotencySettings {
     pub expire_in_sec: u64,
-    pub check_sec: u64,
+    pub check_sec:     u64
 }
 
 #[derive(Debug, Clone, serde::Deserialize)]
 pub struct DatabaseSettings {
-    pub username: String,
-    pub password: SecretString,
+    pub username:      String,
+    pub password:      SecretString,
     #[serde(deserialize_with = "deserialize_number_from_string")]
-    pub port: u16,
-    pub host: String,
+    pub port:          u16,
+    pub host:          String,
     pub database_name: String,
-    pub require_ssl: bool,
+    pub require_ssl:   bool
 }
 
 impl DatabaseSettings {
@@ -59,11 +59,11 @@ impl DatabaseSettings {
 
 #[derive(Debug, Clone, serde::Deserialize)]
 pub struct EmailClientSettings {
-    pub base_url: String,
-    pub sender_email: String,
-    pub authorization_token: SecretString,
+    pub base_url:             String,
+    pub sender_email:         String,
+    pub authorization_token:  SecretString,
     pub timeout_milliseconds: u64,
-    pub retry: RetrySettings,
+    pub retry:                RetrySettings
 }
 
 impl EmailClientSettings {
@@ -76,7 +76,7 @@ impl EmailClientSettings {
             self.base_url,
             sender_email,
             self.authorization_token,
-            timeout,
+            timeout
         )
     }
 
@@ -93,9 +93,9 @@ pub struct RetrySettings {
     #[serde(deserialize_with = "deserialize_number_from_string")]
     pub max_retries: u16,
     #[serde(deserialize_with = "deserialize_number_from_string")]
-    pub cap_sec: u64,
+    pub cap_sec:     u64,
     #[serde(deserialize_with = "deserialize_number_from_string")]
-    pub base_sec: u64,
+    pub base_sec:    u64
 }
 
 pub fn get_configuration() -> Result<Settings, config::ConfigError> {
@@ -111,15 +111,15 @@ pub fn get_configuration() -> Result<Settings, config::ConfigError> {
 
     let settings = config::Config::builder()
         .add_source(config::File::from(
-            configuration_directory.join("base.yaml"),
+            configuration_directory.join("base.yaml")
         ))
         .add_source(config::File::from(
-            configuration_directory.join(environment_filename),
+            configuration_directory.join(environment_filename)
         ))
         .add_source(
             config::Environment::with_prefix("APP")
                 .prefix_separator("_")
-                .separator("__"),
+                .separator("__")
         )
         .build()?;
 
@@ -128,14 +128,14 @@ pub fn get_configuration() -> Result<Settings, config::ConfigError> {
 
 pub enum Environment {
     Local,
-    Production,
+    Production
 }
 
 impl Environment {
     pub fn as_str(&self) -> &'static str {
         match self {
             Environment::Local => "local",
-            Environment::Production => "production",
+            Environment::Production => "production"
         }
     }
 }
@@ -150,7 +150,7 @@ impl TryFrom<String> for Environment {
             other => Err(format!(
                 "{} is not a supported environment. Use either `local` or `production`.",
                 other
-            )),
+            ))
         }
     }
 }

@@ -2,13 +2,13 @@ use std::time::Duration;
 
 use fake::{
     faker::{internet::en::SafeEmail, name::en::Name},
-    Fake,
+    Fake
 };
 use sqlx::postgres::{PgConnectOptions, PgPoolOptions};
 use uuid::Uuid;
 use wiremock::{
     matchers::{any, method, path},
-    Mock, MockBuilder, ResponseTemplate,
+    Mock, MockBuilder, ResponseTemplate
 };
 
 use crate::helpers::{assert_is_redirect_to, spawn_app, ConfirmationLinks, TestApp};
@@ -61,7 +61,7 @@ async fn create_confirmed_subscriber(app: &TestApp) {
 #[sqlx::test]
 async fn newsletters_are_not_delivered_to_unconfirmed_subscribers(
     _: PgPoolOptions,
-    options: PgConnectOptions,
+    options: PgConnectOptions
 ) {
     let pool = PgPoolOptions::new().connect_with(options).await.unwrap();
     let app = spawn_app(pool).await;
@@ -96,7 +96,7 @@ async fn newsletters_are_not_delivered_to_unconfirmed_subscribers(
 #[sqlx::test]
 async fn newsletters_are_delivered_to_confirmed_subscribers(
     _: PgPoolOptions,
-    options: PgConnectOptions,
+    options: PgConnectOptions
 ) {
     let pool = PgPoolOptions::new().connect_with(options).await.unwrap();
 
@@ -164,7 +164,7 @@ async fn newsletters_are_delivered_to_confirmed_subscribers(
 #[sqlx::test]
 async fn you_must_logged_in_to_see_the_newsletter_form(
     _: PgPoolOptions,
-    options: PgConnectOptions,
+    options: PgConnectOptions
 ) {
     let pool = PgPoolOptions::new().connect_with(options).await.unwrap();
     let app = spawn_app(pool).await;
@@ -238,7 +238,7 @@ async fn newsletter_creation_is_idempotent(_: PgPoolOptions, options: PgConnectO
 #[sqlx::test]
 async fn concurrent_form_submission_is_handled_gracefully(
     _: PgPoolOptions,
-    options: PgConnectOptions,
+    options: PgConnectOptions
 ) {
     let pool = PgPoolOptions::new().connect_with(options).await.unwrap();
     let app = spawn_app(pool).await;

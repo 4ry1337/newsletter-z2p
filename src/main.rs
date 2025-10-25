@@ -4,7 +4,7 @@ use newsletter::{
     configuration::get_configuration,
     expiry_requrests, issue_delivery_worker,
     startup::Application,
-    telemetry::{get_subscriber, init_subscriber},
+    telemetry::{get_subscriber, init_subscriber}
 };
 use tokio::task::JoinError;
 
@@ -17,7 +17,7 @@ async fn main() -> anyhow::Result<()> {
     let application = Application::build(configuration.clone()).await?;
     let appication_task = tokio::spawn(application.run_until_stopped());
     let delivery_task = tokio::spawn(issue_delivery_worker::run_worker_until_stopped(
-        configuration.clone(),
+        configuration.clone()
     ));
     let requrest_task = tokio::spawn(expiry_requrests::run_worker_until_stopped(configuration));
 
@@ -33,7 +33,7 @@ fn report_exit(task_name: &str, outcome: Result<Result<(), impl Debug + Display>
     match outcome {
         Ok(Ok(())) => {
             tracing::info!("{} has existed", task_name)
-        }
+        },
         Ok(Err(e)) => {
             tracing::error!(
                 error.cause_chain = ?e,
@@ -41,7 +41,7 @@ fn report_exit(task_name: &str, outcome: Result<Result<(), impl Debug + Display>
                 "{} failed",
                 task_name
             )
-        }
+        },
         Err(e) => {
             tracing::error!(
                 error.cause_chain = ?e,

@@ -5,7 +5,7 @@ use crate::{authentication::UserId, session_stare::TypedSession, utils::see_othe
 
 pub async fn log_out(
     session: TypedSession,
-    user_id: web::ReqData<UserId>,
+    user_id: web::ReqData<UserId>
 ) -> Result<HttpResponse, actix_web::Error> {
     user_id.into_inner();
     session.log_out();

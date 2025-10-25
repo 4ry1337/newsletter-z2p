@@ -6,7 +6,7 @@ use newsletter::{
     email_client::EmailClient,
     issue_delivery_worker::{try_execute_task, ExecutionOutcome},
     startup::Application,
-    telemetry::{get_subscriber, init_subscriber},
+    telemetry::{get_subscriber, init_subscriber}
 };
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -25,17 +25,17 @@ static TRACING: LazyLock<()> = LazyLock::new(|| {
 });
 
 pub struct TestApp {
-    pub address: String,
-    pub port: u16,
-    pub db_pool: PgPool,
+    pub address:      String,
+    pub port:         u16,
+    pub db_pool:      PgPool,
     pub email_server: MockServer,
     pub email_client: EmailClient,
-    pub test_user: TestUser,
-    pub api_client: reqwest::Client,
+    pub test_user:    TestUser,
+    pub api_client:   reqwest::Client
 }
 pub struct ConfirmationLinks {
-    pub html: reqwest::Url,
-    pub plain_text: reqwest::Url,
+    pub html:       reqwest::Url,
+    pub plain_text: reqwest::Url
 }
 
 impl TestApp {
@@ -46,9 +46,9 @@ impl TestApp {
                 &self.email_client,
                 &RetrySettings {
                     max_retries: 3,
-                    cap_sec: 2000,
-                    base_sec: 5,
-                },
+                    cap_sec:     2000,
+                    base_sec:    5
+                }
             )
             .await
             .unwrap()
@@ -104,7 +104,7 @@ impl TestApp {
 
     pub async fn post_publish_newsletter<Body>(&self, body: Body) -> reqwest::Response
     where
-        Body: serde::Serialize,
+        Body: serde::Serialize
     {
         self.api_client
             .post(&format!("{}/admin/newsletters", &self.address))
@@ -116,7 +116,7 @@ impl TestApp {
 
     pub async fn post_login<Body>(&self, body: &Body) -> reqwest::Response
     where
-        Body: serde::Serialize,
+        Body: serde::Serialize
     {
         self.api_client
             .post(&format!("{}/login", &self.address))
@@ -159,7 +159,7 @@ impl TestApp {
 
     pub async fn post_change_password<Body>(&self, body: &Body) -> reqwest::Response
     where
-        Body: serde::Serialize,
+        Body: serde::Serialize
     {
         self.api_client
             .post(&format!("{}/admin/password", &self.address))
@@ -218,7 +218,7 @@ pub async fn spawn_app(pool: PgPool) -> TestApp {
         email_server,
         test_user: TestUser::generate(),
         api_client: client,
-        email_client: configuration.email_client.client(),
+        email_client: configuration.email_client.client()
     };
     test_app.test_user.store(&test_app.db_pool).await;
     test_app
@@ -254,17 +254,17 @@ pub async fn spawn_app(pool: PgPool) -> TestApp {
 //}
 //
 pub struct TestUser {
-    user_id: Uuid,
+    user_id:      Uuid,
     pub username: String,
-    pub password: String,
+    pub password: String
 }
 
 impl TestUser {
     pub fn generate() -> Self {
         Self {
-            user_id: Uuid::new_v4(),
+            user_id:  Uuid::new_v4(),
             username: Uuid::new_v4().to_string(),
-            password: Uuid::new_v4().to_string(),
+            password: Uuid::new_v4().to_string()
         }
     }
 
@@ -281,7 +281,7 @@ impl TestUser {
         let password_hash = Argon2::new(
             Algorithm::Argon2id,
             Version::V0x13,
-            Params::new(15000, 2, 1, None).unwrap(),
+            Params::new(15000, 2, 1, None).unwrap()
         )
         .hash_password(self.password.as_bytes(), &salt)
         .unwrap()

@@ -1,7 +1,7 @@
 use anyhow::Context;
 use argon2::{
     password_hash::SaltString, Algorithm, Argon2, Params, PasswordHash, PasswordHasher,
-    PasswordVerifier, Version,
+    PasswordVerifier, Version
 };
 use secrecy::{ExposeSecret, SecretString};
 use sqlx::PgPool;
@@ -14,18 +14,18 @@ pub enum AuthError {
     #[error("Invalid credentials.")]
     InvalidCredentials(#[source] anyhow::Error),
     #[error(transparent)]
-    UnexpectedError(#[from] anyhow::Error),
+    UnexpectedError(#[from] anyhow::Error)
 }
 
 pub struct Credentials {
     pub username: String,
-    pub password: SecretString,
+    pub password: SecretString
 }
 
 #[tracing::instrument(name = "Validate credentials", skip(credentials, pool))]
 pub async fn validate_credentials(
     credentials: Credentials,
-    pool: &PgPool,
+    pool: &PgPool
 ) -> Result<uuid::Uuid, AuthError> {
     let mut user_id = None;
     let mut expected_password_hash = SecretString::from("$argon2id$v=19$m=15000,t=2,p=1$gZiV/M1gPc22ElAH/Jh1Hw$CWOrkoo7oJBQ/iyh7uJ0LO2aLEfrHwTWllSAxT0zRno".to_string());
@@ -54,7 +54,7 @@ pub async fn validate_credentials(
 )]
 pub fn verify_password_hash(
     expected_password_hash: SecretString,
-    password_candidate: SecretString,
+    password_candidate: SecretString
 ) -> Result<(), AuthError> {
     let expected_password_hash = PasswordHash::new(expected_password_hash.expose_secret())
         .context("Faield to parse hash in PHC string format.")?;
@@ -62,7 +62,7 @@ pub fn verify_password_hash(
     Argon2::default()
         .verify_password(
             password_candidate.expose_secret().as_bytes(),
-            &expected_password_hash,
+            &expected_password_hash
         )
         .context("Invalid password.")
         .map_err(AuthError::InvalidCredentials)
@@ -71,7 +71,7 @@ pub fn verify_password_hash(
 #[tracing::instrument(name = "Get stored credential", skip(username, pool))]
 pub async fn get_stored_credentials(
     username: &str,
-    pool: &PgPool,
+    pool: &PgPool
 ) -> Result<Option<(uuid::Uuid, SecretString)>, anyhow::Error> {
     let row = sqlx::query!(
         r#"SELECT user_id, password_hash FROM users WHERE username = $1"#,
@@ -88,7 +88,7 @@ pub async fn get_stored_credentials(
 pub async fn change_password(
     user_id: Uuid,
     password: SecretString,
-    pool: &PgPool,
+    pool: &PgPool
 ) -> Result<(), anyhow::Error> {
     let password_hash = spawn_blocking_with_tracing(move || compute_password_hash(password))
         .await?
@@ -114,7 +114,7 @@ fn compute_password_hash(password: SecretString) -> Result<SecretString, anyhow:
     let password_hash = Argon2::new(
         Algorithm::Argon2id,
         Version::V0x13,
-        Params::new(15000, 2, 1, None).unwrap(),
+        Params::new(15000, 2, 1, None).unwrap()
     )
     .hash_password(password.expose_secret().as_bytes(), &salt)?
     .to_string();

@@ -32,7 +32,7 @@ impl FromRequest for TypedSession {
 
     fn from_request(
         req: &actix_web::HttpRequest,
-        _payload: &mut actix_web::dev::Payload,
+        _payload: &mut actix_web::dev::Payload
     ) -> Self::Future {
         ready(Ok(TypedSession(req.get_session())))
     }

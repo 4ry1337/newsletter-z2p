@@ -7,14 +7,14 @@ use super::IdempotencyKey;
 #[derive(Debug, sqlx::Type)]
 #[sqlx(type_name = "header_pair")]
 struct HeaderPairRecord {
-    name: String,
-    value: Vec<u8>,
+    name:  String,
+    value: Vec<u8>
 }
 
 pub async fn get_saved_response(
     pool: &PgPool,
     idempotency_key: &IdempotencyKey,
-    user_id: Uuid,
+    user_id: Uuid
 ) -> Result<Option<HttpResponse>, anyhow::Error> {
     let saved_response = sqlx::query!(
         r#"
@@ -49,7 +49,7 @@ pub async fn save_response(
     //pool: &PgPool,
     idempotency_key: &IdempotencyKey,
     user_id: Uuid,
-    http_response: HttpResponse,
+    http_response: HttpResponse
 ) -> Result<HttpResponse, anyhow::Error> {
     let (response_head, body) = http_response.into_parts();
     let response_body = to_bytes(body).await.map_err(|e| anyhow::anyhow!("{}", e))?;
@@ -93,13 +93,13 @@ pub async fn save_response(
 #[derive(Debug)]
 pub enum NextAction {
     StartProcessing(Transaction<'static, Postgres>),
-    ReturnSavedResponse(HttpResponse),
+    ReturnSavedResponse(HttpResponse)
 }
 
 pub async fn try_processing(
     pool: &PgPool,
     idempotency_key: &IdempotencyKey,
-    user_id: Uuid,
+    user_id: Uuid
 ) -> Result<NextAction, anyhow::Error> {
     let mut transaction = pool.begin().await?;
     let query = sqlx::query!(

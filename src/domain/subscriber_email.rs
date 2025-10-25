@@ -30,13 +30,11 @@ impl std::fmt::Display for SubscriberEmail {
 #[cfg(test)]
 mod tests {
     use claims::assert_err;
-    use fake::faker::internet::en::SafeEmail;
-    use fake::Fake;
+    use fake::{faker::internet::en::SafeEmail, Fake};
 
     use crate::domain::SubscriberEmail;
 
-    use rand::rngs::StdRng;
-    use rand::SeedableRng;
+    use rand::{rngs::StdRng, SeedableRng};
 
     #[derive(Debug, Clone)]
     struct ValidEmailFixture(pub String);

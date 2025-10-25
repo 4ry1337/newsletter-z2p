@@ -7,15 +7,15 @@ use uuid::Uuid;
 use crate::{
     authentication::UserId,
     idempotency::{save_response, try_processing, IdempotencyKey, NextAction},
-    utils::{e400, e500, see_other},
+    utils::{e400, e500, see_other}
 };
 
 #[derive(serde::Deserialize)]
 pub struct FormData {
-    title: String,
-    html_content: String,
-    text_content: String,
-    idempotency_key: String,
+    title:           String,
+    html_content:    String,
+    text_content:    String,
+    idempotency_key: String
 }
 
 #[tracing::instrument(
@@ -26,14 +26,14 @@ pub struct FormData {
 pub async fn publish_newsletter(
     user_id: web::ReqData<UserId>,
     form: web::Form<FormData>,
-    pool: web::Data<PgPool>,
+    pool: web::Data<PgPool>
 ) -> Result<HttpResponse, actix_web::Error> {
     let user_id = user_id.into_inner();
     let FormData {
         title,
         html_content,
         text_content,
-        idempotency_key,
+        idempotency_key
     } = form.0;
     let idempotency_key: IdempotencyKey = idempotency_key.try_into().map_err(e400)?;
     let mut transaction = match try_processing(&pool, &idempotency_key, *user_id)
@@ -71,7 +71,7 @@ async fn insert_newsletter_issue(
     transaction: &mut Transaction<'_, Postgres>,
     title: &str,
     text_content: &str,
-    html_content: &str,
+    html_content: &str
 ) -> Result<Uuid, sqlx::Error> {
     let newsletter_issue_id = Uuid::new_v4();
     let query = sqlx::query!(
@@ -95,7 +95,7 @@ async fn insert_newsletter_issue(
 #[tracing::instrument(skip_all)]
 async fn enqueue_delivery_tasks(
     transaction: &mut Transaction<'_, Postgres>,
-    newsletter_issue_id: Uuid,
+    newsletter_issue_id: Uuid
 ) -> Result<(), sqlx::Error> {
     let query = sqlx::query!(
         r#"

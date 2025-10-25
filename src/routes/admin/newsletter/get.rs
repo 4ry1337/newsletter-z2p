@@ -6,7 +6,7 @@ use uuid::Uuid;
 
 #[tracing::instrument(name = "Get newsletter form", skip(flash_messages))]
 pub async fn newsletter_form(
-    flash_messages: IncomingFlashMessages,
+    flash_messages: IncomingFlashMessages
 ) -> Result<HttpResponse, actix_web::Error> {
     let mut message_html = String::new();
     for m in flash_messages.iter() {

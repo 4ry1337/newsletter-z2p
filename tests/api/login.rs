@@ -29,7 +29,7 @@ async fn an_error_flash_message_is_set_on_failure(_: PgPoolOptions, options: PgC
 #[sqlx::test]
 async fn redirect_to_admin_dashboard_after_login_success(
     _: PgPoolOptions,
-    options: PgConnectOptions,
+    options: PgConnectOptions
 ) {
     let pool = PgPoolOptions::new().connect_with(options).await.unwrap();
     let app = spawn_app(pool).await;

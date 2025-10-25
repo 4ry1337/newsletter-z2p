@@ -5,10 +5,10 @@ use crate::domain::SubscriberEmail;
 
 #[derive(Debug, Clone)]
 pub struct EmailClient {
-    sender: SubscriberEmail,
-    base_url: String,
-    http_client: Client,
-    authorization_token: SecretString,
+    sender:              SubscriberEmail,
+    base_url:            String,
+    http_client:         Client,
+    authorization_token: SecretString
 }
 
 impl EmailClient {
@@ -16,7 +16,7 @@ impl EmailClient {
         base_url: String,
         sender: SubscriberEmail,
         authorization_token: SecretString,
-        timeout: std::time::Duration,
+        timeout: std::time::Duration
     ) -> Self {
         let http_client = Client::builder().timeout(timeout).build().unwrap();
 
@@ -24,7 +24,7 @@ impl EmailClient {
             sender,
             base_url,
             http_client,
-            authorization_token,
+            authorization_token
         }
     }
 
@@ -33,7 +33,7 @@ impl EmailClient {
         recipient: &SubscriberEmail,
         subject: &str,
         html_content: &str,
-        text_content: &str,
+        text_content: &str
     ) -> Result<(), reqwest::Error> {
         let url = format!("{}/email", self.base_url);
 
@@ -42,14 +42,14 @@ impl EmailClient {
             to: recipient.as_ref(),
             subject,
             html_body: html_content,
-            text_body: text_content,
+            text_body: text_content
         };
 
         self.http_client
             .post(&url)
             .header(
                 "X-Postmark-Server-Token",
-                self.authorization_token.expose_secret(),
+                self.authorization_token.expose_secret()
             )
             .json(&request_body)
             .send()
@@ -63,11 +63,11 @@ impl EmailClient {
 #[derive(serde::Serialize)]
 #[serde(rename_all = "PascalCase")]
 struct SendEmailRequest<'a> {
-    from: &'a str,
-    to: &'a str,
-    subject: &'a str,
+    from:      &'a str,
+    to:        &'a str,
+    subject:   &'a str,
     html_body: &'a str,
-    text_body: &'a str,
+    text_body: &'a str
 }
 
 #[cfg(test)]
@@ -76,18 +76,17 @@ mod tests {
     use fake::{
         faker::{
             internet::en::SafeEmail,
-            lorem::en::{Paragraph, Sentence},
+            lorem::en::{Paragraph, Sentence}
         },
-        Fake, Faker,
+        Fake, Faker
     };
     use secrecy::SecretString;
     use wiremock::{
         matchers::{any, header, header_exists, method, path},
-        Mock, MockServer, ResponseTemplate,
+        Mock, MockServer, ResponseTemplate
     };
 
-    use crate::domain::SubscriberEmail;
-    use crate::email_client::EmailClient;
+    use crate::{domain::SubscriberEmail, email_client::EmailClient};
 
     struct SendEmailBodyMatcher;
 
@@ -123,7 +122,7 @@ mod tests {
             base_url,
             email(),
             SecretString::from(Faker.fake::<String>()),
-            std::time::Duration::from_millis(200),
+            std::time::Duration::from_millis(200)
         )
     }
 

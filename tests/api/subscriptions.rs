@@ -1,7 +1,7 @@
 use sqlx::postgres::{PgConnectOptions, PgPoolOptions};
 use wiremock::{
     matchers::{method, path},
-    Mock, ResponseTemplate,
+    Mock, ResponseTemplate
 };
 
 use crate::helpers::spawn_app;
@@ -66,7 +66,7 @@ async fn subscribe_returns_a_400_when_data_is_missing(_: PgPoolOptions, options:
 #[sqlx::test]
 async fn subscribe_returns_a_200_when_fields_are_present_but_empty(
     _: PgPoolOptions,
-    options: PgConnectOptions,
+    options: PgConnectOptions
 ) {
     let pool = PgPoolOptions::new().connect_with(options).await.unwrap();
     let app = spawn_app(pool).await;
@@ -91,7 +91,7 @@ async fn subscribe_returns_a_200_when_fields_are_present_but_empty(
 #[sqlx::test]
 async fn subscribe_send_a_confirmation_email_for_valid_data(
     _: PgPoolOptions,
-    options: PgConnectOptions,
+    options: PgConnectOptions
 ) {
     let pool = PgPoolOptions::new().connect_with(options).await.unwrap();
     let app = spawn_app(pool).await;
@@ -110,7 +110,7 @@ async fn subscribe_send_a_confirmation_email_for_valid_data(
 #[sqlx::test]
 async fn subscribe_send_a_confirmation_email_with_a_link(
     _: PgPoolOptions,
-    options: PgConnectOptions,
+    options: PgConnectOptions
 ) {
     let pool = PgPoolOptions::new().connect_with(options).await.unwrap();
     let app = spawn_app(pool).await;
@@ -132,7 +132,7 @@ async fn subscribe_send_a_confirmation_email_with_a_link(
 #[sqlx::test]
 async fn subscribe_fails_if_there_is_a_fatal_database_error(
     _: PgPoolOptions,
-    options: PgConnectOptions,
+    options: PgConnectOptions
 ) {
     let pool = PgPoolOptions::new().connect_with(options).await.unwrap();
     let app = spawn_app(pool).await;

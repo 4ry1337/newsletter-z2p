@@ -1,7 +1,7 @@
 use actix_web::{
     http::StatusCode,
     web::{Data, Query},
-    HttpResponse, ResponseError,
+    HttpResponse, ResponseError
 };
 use anyhow::Context;
 use sqlx::PgPool;
@@ -14,7 +14,7 @@ pub enum ConfirmationError {
     #[error(transparent)]
     UnexpectedError(#[from] anyhow::Error),
     #[error("There is no subscriber associated with the provided token.")]
-    UnknownToken,
+    UnknownToken
 }
 
 impl std::fmt::Debug for ConfirmationError {
@@ -27,20 +27,20 @@ impl ResponseError for ConfirmationError {
     fn status_code(&self) -> actix_web::http::StatusCode {
         match self {
             Self::UnexpectedError(_) => StatusCode::INTERNAL_SERVER_ERROR,
-            Self::UnknownToken => StatusCode::UNAUTHORIZED,
+            Self::UnknownToken => StatusCode::UNAUTHORIZED
         }
     }
 }
 
 #[derive(serde::Deserialize)]
 pub struct Parameters {
-    subscription_token: String,
+    subscription_token: String
 }
 
 #[tracing::instrument(name = "Confirm a pending subscriber", skip(parameters, pool))]
 pub async fn confirm(
     parameters: Query<Parameters>,
-    pool: Data<PgPool>,
+    pool: Data<PgPool>
 ) -> Result<HttpResponse, ConfirmationError> {
     let subscriber_id = get_subscriber_id_from_token(&pool, &parameters.subscription_token)
         .await
@@ -69,7 +69,7 @@ pub async fn confirm_subscriber(pool: &PgPool, subscriber_id: Uuid) -> Result<()
 #[tracing::instrument(name = "Get subscriber_id from token", skip(subscription_token, pool))]
 pub async fn get_subscriber_id_from_token(
     pool: &PgPool,
-    subscription_token: &str,
+    subscription_token: &str
 ) -> Result<Option<Uuid>, sqlx::Error> {
     let result = sqlx::query!(
         "SELECT subscriber_id FROM subscription_tokens WHERE subscription_token = $1",

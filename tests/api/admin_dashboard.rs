@@ -5,7 +5,7 @@ use crate::helpers::{assert_is_redirect_to, spawn_app};
 #[sqlx::test]
 async fn you_must_be_logged_in_to_access_the_admin_dashboard(
     _: PgPoolOptions,
-    options: PgConnectOptions,
+    options: PgConnectOptions
 ) {
     let pool = PgPoolOptions::new().connect_with(options).await.unwrap();
     let app = spawn_app(pool).await;

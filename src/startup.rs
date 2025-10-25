@@ -6,7 +6,7 @@ use actix_web::{
     dev::Server,
     middleware::from_fn,
     web::{self, Data},
-    App, HttpServer,
+    App, HttpServer
 };
 use actix_web_flash_messages::{storage::CookieMessageStore, FlashMessagesFramework};
 use secrecy::{ExposeSecret, SecretString};
@@ -19,13 +19,13 @@ use crate::{
     email_client::EmailClient,
     routes::{
         admin_dashboard, change_password, change_password_form, confirm, health_check, home,
-        log_out, login, login_form, newsletter_form, publish_newsletter, subscribe,
-    },
+        log_out, login, login_form, newsletter_form, publish_newsletter, subscribe
+    }
 };
 
 pub struct Application {
-    port: u16,
-    server: Server,
+    port:   u16,
+    server: Server
 }
 
 #[derive(Debug, Clone)]
@@ -42,7 +42,7 @@ impl Application {
 
     pub async fn build_with_pool(
         configuration: Settings,
-        connection_pool: PgPool,
+        connection_pool: PgPool
     ) -> Result<Self, anyhow::Error> {
         let email_client = configuration.email_client.client();
         let address = format!(
@@ -57,7 +57,7 @@ impl Application {
             email_client,
             configuration.application.base_url,
             configuration.application.hmac_secret,
-            configuration.redis_uri,
+            configuration.redis_uri
         )
         .await?;
 
@@ -83,7 +83,7 @@ async fn run(
     email_client: EmailClient,
     base_url: String,
     hmac_secret: SecretString,
-    redis_uri: SecretString,
+    redis_uri: SecretString
 ) -> Result<Server, anyhow::Error> {
     let secret_key = Key::from(hmac_secret.expose_secret().as_bytes());
     let message_store = CookieMessageStore::builder(secret_key.clone()).build();
@@ -95,7 +95,7 @@ async fn run(
             .wrap(message_framwork.clone())
             .wrap(SessionMiddleware::new(
                 redis_store.clone(),
-                secret_key.clone(),
+                secret_key.clone()
             ))
             .wrap(TracingLogger::default())
             .route("/health_check", web::get().to(health_check))
@@ -112,7 +112,7 @@ async fn run(
                     .route("/password", web::post().to(change_password))
                     .route("/logout", web::post().to(log_out))
                     .route("/newsletters", web::get().to(newsletter_form))
-                    .route("/newsletters", web::post().to(publish_newsletter)),
+                    .route("/newsletters", web::post().to(publish_newsletter))
             )
             .app_data(Data::new(db_pool.clone()))
             .app_data(Data::new(email_client.clone()))

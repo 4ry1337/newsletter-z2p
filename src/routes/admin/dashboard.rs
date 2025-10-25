@@ -7,7 +7,7 @@ use super::get_username;
 
 pub async fn admin_dashboard(
     pool: web::Data<PgPool>,
-    user_id: web::ReqData<UserId>,
+    user_id: web::ReqData<UserId>
 ) -> Result<HttpResponse, actix_web::Error> {
     let user_id = user_id.into_inner();
 

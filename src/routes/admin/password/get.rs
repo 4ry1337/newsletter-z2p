@@ -11,7 +11,7 @@ use crate::authentication::UserId;
 )]
 pub async fn change_password_form(
     flash_messages: IncomingFlashMessages,
-    user_id: web::ReqData<UserId>,
+    user_id: web::ReqData<UserId>
 ) -> Result<HttpResponse, actix_web::Error> {
     let mut message_html = String::new();
     for m in flash_messages.iter() {

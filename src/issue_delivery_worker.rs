@@ -9,20 +9,20 @@ use crate::{
     configuration::{RetrySettings, Settings},
     domain::SubscriberEmail,
     email_client::EmailClient,
-    startup::get_connection_pool,
+    startup::get_connection_pool
 };
 
 #[derive(Debug)]
 pub enum ExecutionOutcome {
     TaskCompleted,
-    EmptyQueue,
+    EmptyQueue
 }
 
 #[tracing::instrument(skip_all)]
 pub async fn try_execute_task(
     pool: &PgPool,
     email_client: &EmailClient,
-    retry: &RetrySettings,
+    retry: &RetrySettings
 ) -> Result<ExecutionOutcome, anyhow::Error> {
     let task = dequeue_task(pool).await?;
 
@@ -44,14 +44,14 @@ pub async fn try_execute_task(
                     &email,
                     &issue.title,
                     &issue.html_content,
-                    &issue.text_content,
+                    &issue.text_content
                 )
                 .await
             {
                 Ok(_) => {
                     delete_task(transaction, &issue_id, email.as_ref()).await?;
                     Ok(ExecutionOutcome::TaskCompleted)
-                }
+                },
                 Err(e) => {
                     if n_retries < retry.max_retries {
                         tracing::error!(
@@ -68,8 +68,8 @@ pub async fn try_execute_task(
                             exponential_backoff_equal_jitter(
                                 retry.cap_sec,
                                 retry.base_sec,
-                                n_retries,
-                            ),
+                                n_retries
+                            )
                         )
                         .await
                         {
@@ -89,9 +89,9 @@ pub async fn try_execute_task(
                             email.as_ref()
                         ))
                     }
-                }
+                },
             }
-        }
+        },
         Err(e) => {
             tracing::error!(
                 error.cause_chain = ?e,
@@ -108,7 +108,7 @@ type PgTransaction = Transaction<'static, Postgres>;
 
 #[tracing::instrument(name = "Dequeue task", skip_all)]
 async fn dequeue_task(
-    pool: &PgPool,
+    pool: &PgPool
 ) -> Result<Option<(PgTransaction, Uuid, String, u16)>, anyhow::Error> {
     let mut transaction = pool.begin().await?;
 
@@ -131,7 +131,7 @@ async fn dequeue_task(
             transaction,
             row.newsletter_issue_id,
             row.subscriber_email,
-            row.n_retries.try_into().unwrap(),
+            row.n_retries.try_into().unwrap()
         )))
     } else {
         Ok(None)
@@ -144,7 +144,7 @@ async fn reschedule_task(
     issue_id: &Uuid,
     email: &SubscriberEmail,
     n_retries: u16,
-    delay_seconds: f64,
+    delay_seconds: f64
 ) -> Result<(), anyhow::Error> {
     let query = sqlx::query!(
         r#"
@@ -176,7 +176,7 @@ fn exponential_backoff_equal_jitter(cap: u64, base: u64, attempt: u16) -> f64 {
 async fn delete_task(
     mut transaction: PgTransaction,
     issue_id: &Uuid,
-    email: &str,
+    email: &str
 ) -> Result<(), anyhow::Error> {
     let query = sqlx::query!(
         r#"
@@ -193,9 +193,9 @@ async fn delete_task(
 
 #[derive(Debug)]
 struct NewsletterIssue {
-    title: String,
+    title:        String,
     text_content: String,
-    html_content: String,
+    html_content: String
 }
 
 #[tracing::instrument(name = "Get Newsletter Issue", skip_all)]
@@ -217,14 +217,14 @@ async fn get_issue(pool: &PgPool, issue_id: &Uuid) -> Result<NewsletterIssue, an
 async fn worker_loop(
     pool: PgPool,
     email_client: EmailClient,
-    retry: RetrySettings,
+    retry: RetrySettings
 ) -> Result<(), anyhow::Error> {
     loop {
         match try_execute_task(&pool, &email_client, &retry).await {
             Ok(ExecutionOutcome::EmptyQueue) => {
                 tokio::time::sleep(Duration::from_secs(10)).await;
-            }
-            Ok(ExecutionOutcome::TaskCompleted) => {}
+            },
+            Ok(ExecutionOutcome::TaskCompleted) => {},
             Err(_) => {
                 tokio::time::sleep(Duration::from_secs(1)).await;
             }

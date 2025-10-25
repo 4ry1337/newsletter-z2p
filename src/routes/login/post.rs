@@ -7,7 +7,7 @@ use sqlx::PgPool;
 use crate::{
     authentication::{validate_credentials, AuthError, Credentials},
     session_stare::TypedSession,
-    utils::{error_chain_fmt, see_other},
+    utils::{error_chain_fmt, see_other}
 };
 
 #[derive(thiserror::Error)]
@@ -15,7 +15,7 @@ pub enum LoginError {
     #[error("Authentication failed.")]
     AuthError(#[source] anyhow::Error),
     #[error("Something went wrong")]
-    UnexpectedError(#[from] anyhow::Error),
+    UnexpectedError(#[from] anyhow::Error)
 }
 
 impl std::fmt::Debug for LoginError {
@@ -27,7 +27,7 @@ impl std::fmt::Debug for LoginError {
 #[derive(Debug, Deserialize)]
 pub struct FormData {
     username: String,
-    password: SecretString,
+    password: SecretString
 }
 
 #[tracing::instrument(
@@ -37,11 +37,11 @@ pub struct FormData {
 pub async fn login(
     form: web::Form<FormData>,
     pool: web::Data<PgPool>,
-    session: TypedSession,
+    session: TypedSession
 ) -> Result<HttpResponse, InternalError<LoginError>> {
     let credentials = Credentials {
         username: form.0.username,
-        password: form.0.password,
+        password: form.0.password
     };
 
     tracing::Span::current().record("username", tracing::field::display(&credentials.username));
@@ -54,11 +54,11 @@ pub async fn login(
                 .insert_user_id(user_id)
                 .map_err(|e| login_redirect(LoginError::UnexpectedError(e.into())));
             Ok(see_other("/admin/dashboard"))
-        }
+        },
         Err(error) => {
             let error = match error {
                 AuthError::InvalidCredentials(_) => LoginError::AuthError(error.into()),
-                AuthError::UnexpectedError(_) => LoginError::UnexpectedError(error.into()),
+                AuthError::UnexpectedError(_) => LoginError::UnexpectedError(error.into())
             };
 
             Err(login_redirect(error))
