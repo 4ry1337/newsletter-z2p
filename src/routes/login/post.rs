@@ -6,7 +6,7 @@ use sqlx::PgPool;
 
 use crate::{
     authentication::{validate_credentials, AuthError, Credentials},
-    session_stare::TypedSession,
+    session_store::TypedSession,
     utils::{error_chain_fmt, see_other}
 };
 

@@ -1,7 +1,7 @@
 use actix_web::{web, HttpResponse};
 use actix_web_flash_messages::FlashMessage;
 
-use crate::{authentication::UserId, session_stare::TypedSession, utils::see_other};
+use crate::{authentication::UserId, session_store::TypedSession, utils::see_other};
 
 pub async fn log_out(
     session: TypedSession,

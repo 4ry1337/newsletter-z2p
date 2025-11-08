@@ -6,7 +6,7 @@ pub mod expiry_requrests;
 pub mod idempotency;
 pub mod issue_delivery_worker;
 pub mod routes;
-pub mod session_state;
+pub mod session_store;
 pub mod startup;
 pub mod telemetry;
 pub mod utils;

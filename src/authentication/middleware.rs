@@ -10,7 +10,7 @@ use actix_web::{
 use uuid::Uuid;
 
 use crate::{
-    session_stare::TypedSession,
+    session_store::TypedSession,
     utils::{e500, see_other}
 };
 
